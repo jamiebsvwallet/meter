@@ -1,15 +1,50 @@
 {
-  "name": "@bsv/project",
-  "private": true,
+  "name": "plumbing-iot-bsv",
+  "private": false,
   "version": "1.0.0",
-  "description": "Standard BSV project structure",
+  "description": "IoT Leak Prevention & Plumbing Management Platform on BSV Blockchain",
+  "main": "backend/dist/esm/src/server.js",
+  "type": "module",
   "scripts": {
-    "start": "lars start"
+    "setup": "bash start.sh",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "start:dev": "npm run start:dev -w backend",
+    "start:prod": "npm run start:prod -w backend",
+    "dev": "concurrently \"npm run start:dev -w backend\" \"npm start -w frontend\"",
+    "test": "npm run test -w backend",
+    "test:watch": "npm run test:watch -w backend",
+    "test:coverage": "npm run test:coverage -w backend",
+    "lint": "npm run lint -w backend",
+    "compile": "npm run compile -w backend",
+    "docker:build": "docker build -t plumbing-backend:latest .",
+    "docker:run": "docker-compose up",
+    "docker:stop": "docker-compose down",
+    "docs": "npm run docs -w backend"
   },
-  "dependencies": {
-    "@bsv/lars": "file:../lars"
+  "keywords": [
+    "plumbing",
+    "iot",
+    "bsv",
+    "blockchain",
+    "leak-detection",
+    "smart-contracts"
+  ],
+  "author": "p2ppsr",
+  "license": "MIT",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.5.4"
   },
-  "keywords": [],
-  "author": "",
-  "license": "SEE LICENSE IN LICENSE.txt"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
 }
