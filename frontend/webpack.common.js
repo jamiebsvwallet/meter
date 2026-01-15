@@ -6,15 +6,36 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 module.exports = {
   output: {
     path: path.join(__dirname, '/build'),
-    filename: 'bundle.js',
+    filename: '[name].[contenthash].js',
     publicPath: '/'
+  },
+  optimization: {
+    runtimeChunk: 'single',
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        bsv_vendors: {
+          test: /[\\/]node_modules[\\/](?:@bsv|scrypt-ts|@babbage)[\\/]/,
+          name: 'bsv_vendors',
+          chunks: 'async',
+          priority: 30,
+          reuseExistingChunk: true
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: -10
+        }
+      }
+    }
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
       filename: './index.html',
       favicon: './public/favicon.ico',
-      inject: false,
+      inject: true,
     }),
     new NodePolyfillPlugin(),
     new CopyWebpackPlugin({

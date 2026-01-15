@@ -1,4 +1,4 @@
-import React, { useState, type FormEvent } from 'react'
+import React, { useState, type FormEvent, Suspense } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import {
@@ -10,23 +10,12 @@ import { styled } from '@mui/system'
 import AddIcon from '@mui/icons-material/Add'
 import GitHubIcon from '@mui/icons-material/GitHub'
 import useAsyncEffect from 'use-async-effect'
-import {
-  createAction,
-  createSignature,
-  EnvelopeEvidenceApi,
-  getPublicKey,
-  toBEEFfromEnvelope
-} from '@babbage/sdk-ts'
 import { type Meter, type Token } from './types/types'
 import './App.scss'
+const VRPlaceholder = React.lazy(() => import('./components/VRPlaceholder'))
 import { IdentityCard } from 'metanet-identity-react'
-import { MeterContract, MeterArtifact } from '@bsv/backend'
-import { SHIPBroadcaster, LookupResolver, Transaction, Utils, ProtoWallet } from '@bsv/sdk'
-import { toEnvelopeFromBEEF } from '@babbage/sdk-ts/out/src/utils/toBEEF'
-MeterContract.loadArtifact(MeterArtifact)
-import { bsv, toByteString } from 'scrypt-ts'
 
-const anyoneWallet = new ProtoWallet('anyone')
+// Heavy blockchain SDKs and contract libraries are dynamically imported where needed to reduce initial bundle size.
 
 // These are some basic styling rules for the React application.
 // We are using MUI (https://mui.com) for all of our UI components (i.e. buttons and dialogs etc.).
@@ -66,10 +55,21 @@ const App: React.FC = () => {
   // Creates a new meter.
   // This function will run when the user clicks "OK" in the creation dialog.
   const handleCreateSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault() // Stop the HTML form from reloading the page.
+    e.preventDefault()
     try {
-      // Now, we start a loading bar before the heavy lifting.
       setCreateLoading(true)
+
+      // Dynamically import heavy SDKs only when needed
+      const sdk = (await import('@babbage/sdk-ts')) as any
+      const { createAction, createSignature, toBEEFfromEnvelope, getPublicKey } = sdk
+      const bsvSdk = (await import('@bsv/sdk')) as any
+      const { SHIPBroadcaster } = bsvSdk
+      const backend = (await import('@bsv/backend')) as any
+      const { MeterContract, MeterArtifact } = backend
+      MeterContract.loadArtifact(MeterArtifact)
+      const scrypt = (await import('scrypt-ts')) as any
+      const { bsv, toByteString } = scrypt
+
       const pubKeyResult = await getPublicKey({ identityKey: true })
 
       const signature = await createSignature({
@@ -78,48 +78,38 @@ const App: React.FC = () => {
         keyID: '1',
         counterparty: 'anyone'
       })
-      const signatureHex = Utils.toHex(Array.from(new Uint8Array(signature)))
+      const signatureHex = (bsvSdk.Utils && bsvSdk.Utils.toHex)
+        ? bsvSdk.Utils.toHex(Array.from(new Uint8Array(signature)))
+        : Buffer.from(signature).toString('hex')
 
-      // Get locking script
       const meter = new MeterContract(
         BigInt(1),
         toByteString(pubKeyResult, false),
         toByteString(signatureHex, false)
       )
       const lockingScript = meter.lockingScript.toHex()
+
       const transactionEnvelope = await createAction({
         description: 'Create a meter',
-        outputs: [{
-          script: lockingScript,
-          satoshis: 1,
-          description: 'meter output'
-        }]
+        outputs: [{ script: lockingScript, satoshis: 1, description: 'meter output' }]
       })
-      const beefTx = toBEEFfromEnvelope(transactionEnvelope as EnvelopeEvidenceApi)
+
+      const beefTx = toBEEFfromEnvelope(transactionEnvelope as any)
       const broadcaster = new SHIPBroadcaster(['tm_meter'])
-      // Send the transaction to the overlay network
       const broadcastResult = await beefTx.tx.broadcast(broadcaster)
       console.log(broadcastResult)
 
-      // created, and added to the list.
       toast.dark('Meter successfully created!')
       setMeters((originalMeters) => ([
         {
           value: 1,
           creatorIdentityKey: pubKeyResult,
-          token: {
-            ...transactionEnvelope,
-            rawTX: transactionEnvelope.rawTx,
-            outputIndex: 0,
-            lockingScript: lockingScript,
-            satoshis: 1
-          } as Token
+          token: { ...transactionEnvelope, rawTX: transactionEnvelope.rawTx, outputIndex: 0, lockingScript, satoshis: 1 } as Token
         },
         ...originalMeters
       ]))
       setCreateOpen(false)
     } catch (e) {
-      // Any errors are shown on the screen and printed in the developer console
       toast.error((e as Error).message)
       console.error(e)
     } finally {
@@ -129,19 +119,26 @@ const App: React.FC = () => {
 
   // Load meters
   useAsyncEffect(async () => {
+    // Dynamically import SDKs used for loading meters to avoid bundling them in initial payload
+    const bsvSdk = (await import('@bsv/sdk')) as any
+    const { LookupResolver, Transaction, ProtoWallet, Utils } = bsvSdk
+    const backend = (await import('@bsv/backend')) as any
+    const { MeterContract, MeterArtifact } = backend
+    MeterContract.loadArtifact(MeterArtifact)
+    const beefUtils = (await import('@babbage/sdk-ts/out/src/utils/toBEEF')) as any
+    const { toEnvelopeFromBEEF } = beefUtils
+
+    const anyoneWallet = new ProtoWallet('anyone')
+
     const resolver = new LookupResolver()
-    const lookupResult = await resolver.query({
-      service: 'ls_meter',
-      query: 'findAll'
-    })
-    if (lookupResult.type !== 'output-list') {
-      throw new Error('Wrong result type!')
-    }
+    const lookupResult = await resolver.query({ service: 'ls_meter', query: 'findAll' })
+    if (lookupResult.type !== 'output-list') throw new Error('Wrong result type!')
+
     const parsedResults: Meter[] = []
     for (const result of lookupResult.outputs) {
       const tx = Transaction.fromBEEF(result.beef)
       const script = tx.outputs[result.outputIndex].lockingScript.toHex()
-      const meter = MeterContract.fromLockingScript(script) as MeterContract
+      const meter = MeterContract.fromLockingScript(script) as any
       const convertedToken = toEnvelopeFromBEEF(result.beef)
 
       const verifyResult = await anyoneWallet.verifySignature({
@@ -151,6 +148,7 @@ const App: React.FC = () => {
         data: [1],
         signature: Utils.toArray(meter.creatorSignature, 'hex')
       })
+
       if (verifyResult.valid !== true) {
         throw new Error('Signature invalid')
       }
@@ -168,59 +166,55 @@ const App: React.FC = () => {
         } as Token
       })
     }
+
     setMeters(parsedResults)
     setMetersLoading(false)
   }, [])
 
   // Handle decrement
   const handleDecrement = async (meterIndex: number) => {
-    // Spend the token and create a neww transaction
     const m = meters[meterIndex]
+
+    // Dynamically import heavy libs used here
+    const backend = (await import('@bsv/backend')) as any
+    const { MeterContract } = backend
+    const scrypt = (await import('scrypt-ts')) as any
+    const { bsv } = scrypt
+    const sdk = (await import('@babbage/sdk-ts')) as any
+    const { createAction, toBEEFfromEnvelope } = sdk
+    const bsvSdk = (await import('@bsv/sdk')) as any
+    const { SHIPBroadcaster } = bsvSdk
+
     const meter = MeterContract.fromLockingScript(m.token.lockingScript)
-    const nextMeter = MeterContract.fromLockingScript(m.token.lockingScript) as MeterContract
+    const nextMeter = MeterContract.fromLockingScript(m.token.lockingScript) as any
     nextMeter.decrement()
     const nextScript = nextMeter.lockingScript
     const parsedFromTx = new bsv.Transaction(m.token.rawTX)
+
     const unlockingScript = await meter.getUnlockingScript(async (self) => {
       const bsvtx = new bsv.Transaction()
-      bsvtx.from({
-        txId: m.token.txid,
-        outputIndex: m.token.outputIndex,
-        script: m.token.lockingScript,
-        satoshis: m.token.satoshis
-      })
-      bsvtx.addOutput(new bsv.Transaction.Output({
-        script: nextScript,
-        satoshis: m.token.satoshis
-      }))
+      bsvtx.from({ txId: m.token.txid, outputIndex: m.token.outputIndex, script: m.token.lockingScript, satoshis: m.token.satoshis })
+      bsvtx.addOutput(new bsv.Transaction.Output({ script: nextScript, satoshis: m.token.satoshis }))
       self.to = { tx: bsvtx, inputIndex: 0 }
       self.from = { tx: parsedFromTx, outputIndex: 0 }
-        ; (self as MeterContract).decrementOnChain()
+      ; (self as any).decrementOnChain()
     })
-    console.log('Got unlocking script', unlockingScript)
+
     const broadcastActionParams = {
       inputs: {
         [m.token.txid]: {
           ...m.token,
           rawTx: m.token.rawTX,
-          outputsToRedeem: [{
-            index: m.token.outputIndex,
-            unlockingScript: unlockingScript.toHex(),
-            spendingDescription: 'Previous counter token'
-          }]
+          outputsToRedeem: [{ index: m.token.outputIndex, unlockingScript: unlockingScript.toHex(), spendingDescription: 'Previous counter token' }]
         }
       },
-      outputs: [{
-        script: nextScript.toHex(),
-        satoshis: m.token.satoshis,
-        description: 'counter token'
-      }],
+      outputs: [{ script: nextScript.toHex(), satoshis: m.token.satoshis, description: 'counter token' }],
       description: `Decrement a counter`,
       acceptDelayedBroadcast: false
     }
+
     let currentTX = await createAction(broadcastActionParams)
-    const beefTx = toBEEFfromEnvelope(currentTX as EnvelopeEvidenceApi)
-    // Send the transaction to the overlay network
+    const beefTx = toBEEFfromEnvelope(currentTX as any)
     const broadcastResult = await beefTx.tx.broadcast(new SHIPBroadcaster(['tm_meter']))
     console.log(broadcastResult)
 
@@ -233,53 +227,48 @@ const App: React.FC = () => {
 
   // Handle increment
   const handleIncrement = async (meterIndex: number) => {
-    // Spend the token and create a neww transaction
     const m = meters[meterIndex]
+
+    // Dynamically import heavy libs used here
+    const backend = (await import('@bsv/backend')) as any
+    const { MeterContract } = backend
+    const scrypt = (await import('scrypt-ts')) as any
+    const { bsv } = scrypt
+    const sdk = (await import('@babbage/sdk-ts')) as any
+    const { createAction, toBEEFfromEnvelope } = sdk
+    const bsvSdk = (await import('@bsv/sdk')) as any
+    const { SHIPBroadcaster } = bsvSdk
+
     const meter = MeterContract.fromLockingScript(m.token.lockingScript)
-    const nextMeter = MeterContract.fromLockingScript(m.token.lockingScript) as MeterContract
+    const nextMeter = MeterContract.fromLockingScript(m.token.lockingScript) as any
     nextMeter.increment()
     const nextScript = nextMeter.lockingScript
     const parsedFromTx = new bsv.Transaction(m.token.rawTX)
+
     const unlockingScript = await meter.getUnlockingScript(async (self) => {
       const bsvtx = new bsv.Transaction()
-      bsvtx.from({
-        txId: m.token.txid,
-        outputIndex: m.token.outputIndex,
-        script: m.token.lockingScript,
-        satoshis: m.token.satoshis
-      })
-      bsvtx.addOutput(new bsv.Transaction.Output({
-        script: nextScript,
-        satoshis: m.token.satoshis
-      }))
+      bsvtx.from({ txId: m.token.txid, outputIndex: m.token.outputIndex, script: m.token.lockingScript, satoshis: m.token.satoshis })
+      bsvtx.addOutput(new bsv.Transaction.Output({ script: nextScript, satoshis: m.token.satoshis }))
       self.to = { tx: bsvtx, inputIndex: 0 }
       self.from = { tx: parsedFromTx, outputIndex: 0 }
-        ; (self as MeterContract).incrementOnChain()
+      ; (self as any).incrementOnChain()
     })
-    console.log('Got unlocking script', unlockingScript)
+
     const broadcastActionParams = {
       inputs: {
         [m.token.txid]: {
           ...m.token,
           rawTx: m.token.rawTX,
-          outputsToRedeem: [{
-            index: m.token.outputIndex,
-            unlockingScript: unlockingScript.toHex(),
-            spendingDescription: 'Previous counter token'
-          }]
+          outputsToRedeem: [{ index: m.token.outputIndex, unlockingScript: unlockingScript.toHex(), spendingDescription: 'Previous counter token' }]
         }
       },
-      outputs: [{
-        script: nextScript.toHex(),
-        satoshis: m.token.satoshis,
-        description: 'counter token'
-      }],
+      outputs: [{ script: nextScript.toHex(), satoshis: m.token.satoshis, description: 'counter token' }],
       description: `Increment a counter`,
       acceptDelayedBroadcast: false
     }
+
     let currentTX = await createAction(broadcastActionParams)
-    const beefTx = toBEEFfromEnvelope(currentTX as EnvelopeEvidenceApi)
-    // Send the transaction to the overlay network
+    const beefTx = toBEEFfromEnvelope(currentTX as any)
     const broadcastResult = await beefTx.tx.broadcast(new SHIPBroadcaster(['tm_meter']))
     console.log(broadcastResult)
 
@@ -359,6 +348,14 @@ const App: React.FC = () => {
           </List>
         )
       }
+
+      {/* 3D VR Placeholder */}
+      <div className="vr-section">
+        <Typography variant='h5' sx={{ paddingTop: '1.5em' }}>3D VR Placeholder</Typography>
+        <Suspense fallback={<div style={{ padding: '1em' }}>Loading 3D...</div>}>
+          <VRPlaceholder />
+        </Suspense>
+      </div>
 
       <Dialog open={createOpen} onClose={() => { setCreateOpen(false) }}>
         <form onSubmit={(e) => {
