@@ -1,5 +1,11 @@
 /**
- * Social Intelligence API Routes
+ * Social Intelligence & Guardian Angel System - API Routes
+ * Copyright © 2026 - All Rights Reserved
+ * 
+ * CONFIDENTIAL AND PROPRIETARY
+ * Created: January 18, 2026 08:59:38 UTC
+ * Git Commit: 222fa4c7b18c49341ce43ce4a93882d908ec8e6a
+ * 
  * Endpoints for vulnerability detection and social impact reporting
  */
 

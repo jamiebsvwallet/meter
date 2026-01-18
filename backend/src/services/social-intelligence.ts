@@ -1,5 +1,15 @@
 /**
- * Social Intelligence Service
+ * Social Intelligence & Guardian Angel System
+ * Copyright © 2026 - All Rights Reserved
+ * 
+ * CONFIDENTIAL AND PROPRIETARY
+ * This file contains trade secrets and confidential information.
+ * Unauthorized use, copying, or distribution is strictly prohibited.
+ * 
+ * Created: January 18, 2026 08:59:38 UTC
+ * Git Commit: 222fa4c7b18c49341ce43ce4a93882d908ec8e6a
+ * File Hash: 9265f638354e2d23d65956ab653bd409601281671a22f55aa6477900ffb2561a
+ * 
  * AI-Powered Vulnerable Customer Early Warning System
  * 
  * Detects vulnerability patterns through water usage analytics:
