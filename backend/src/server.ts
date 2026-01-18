@@ -322,6 +322,12 @@ async function startServer(): Promise<void> {
     // Water Data Marketplace routes
     const marketplaceRoutes = await import('./api/marketplace.routes.js')
     app.use('/api/marketplace', marketplaceRoutes.default)
+    
+    // Social Intelligence routes (Guardian Angel system)
+    const socialRoutes = await import('./api/social-intelligence.routes.js')
+    app.use('/api/social', socialRoutes.default)
+    console.log('✓ Social Intelligence (Guardian Angel) routes registered')
+    
     // Add a top-level heatmap endpoint (global aggregation)
     try {
       const plumbingService = new PlumbingService(getDatabase())

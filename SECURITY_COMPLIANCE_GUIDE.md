@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document details the enterprise-grade security, compliance, and demand forecasting features implemented to achieve regulations compliance (GDPR, SOC2, ISO27001, HIPAA, PCI-DSS).
+This document details the enterprise-grade security, compliance, and demand forecasting features implemented to achieve regulations compliance (GDPR, SOC2, ISO27001, ISO27002, ISO27045, ISO9001, ISO14001, ISO55001, ISO46001, ISO24516-1, ISO25958, HIPAA, PCI-DSS).
+
+**For detailed water management and asset compliance, see: [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md)**
 
 ## Table of Contents
 
@@ -286,6 +288,114 @@ interface Consent {
    - Network segmentation
    - Secure data transfer
    - API security
+
+### ISO27002 Compliance
+
+**Code of Practice for Information Security Controls:**
+
+Implements all 14 domains of ISO 27002:2022 including:
+- Access controls (Section 9)
+- Cryptography (Section 10)
+- Physical security (Section 11)
+- Operations security (Section 12)
+- Communications security (Section 13)
+- Supplier relationships (Section 15)
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#isoiec-27002---information-security-controls) for detailed implementation.**
+
+### ISO27045 Compliance
+
+**Information Security Incident Management:**
+
+1. **Incident Detection** ✅
+   - Automated security monitoring
+   - Real-time alerting
+   - Anomaly detection
+
+2. **Incident Response** ✅
+   - Classification system (low/medium/high/critical)
+   - Response procedures documented
+   - Containment and recovery protocols
+
+3. **Evidence Collection** ✅
+   - Comprehensive audit logging
+   - Forensic analysis capability
+   - Chain of custody procedures
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#isoiec-27045---information-security-incident-management) for detailed procedures.**
+
+### ISO9001 Compliance
+
+**Quality Management Systems:**
+
+- Quality policy established
+- Customer focus mechanisms
+- Quality objectives defined (uptime, accuracy, satisfaction)
+- Documented procedures for all operations
+- Quality metrics tracking
+- Corrective action procedures
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#iso-9001---quality-management-systems) for full implementation.**
+
+### ISO14001 Compliance
+
+**Environmental Management Systems:**
+
+- Environmental policy for water conservation
+- Water waste reduction objectives (25% target)
+- Environmental performance monitoring
+- Carbon footprint tracking
+- Annual environmental reporting
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#iso-14001---environmental-management-systems) for details.**
+
+### ISO55001 Compliance
+
+**Asset Management:**
+
+- Asset management policy and objectives
+- Asset lifecycle management (10-year horizon)
+- Performance evaluation system
+- Risk-based asset management
+- Predictive maintenance scheduling
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#iso-55001---asset-management) for comprehensive details.**
+
+### ISO46001 Compliance
+
+**Water Efficiency Management Systems (WEMS):**
+
+- Water use assessment and monitoring
+- Water efficiency objectives (20-30% savings)
+- Continuous monitoring via IoT
+- Performance evaluation
+- Improvement action tracking
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#iso-46001---water-efficiency-management-systems-wems) for implementation.**
+
+### ISO24516-1 Compliance
+
+**Asset Management for Water Services:**
+
+- Asset inventory and tracking
+- Asset performance monitoring
+- Risk-based asset management
+- Lifecycle management (10-year retention)
+- Data management procedures
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#iso-24516-1---asset-management-for-water-services) for details.**
+
+### ISO25958 Compliance
+
+**Water Footprint & Water Neutrality:**
+
+- Water footprint assessment
+- Conservation measures (leak detection)
+- Water neutrality tracking
+- Transparent impact reporting
+- Carbon offset integration
+
+**See [ISO_WATER_COMPLIANCE.md](ISO_WATER_COMPLIANCE.md#isonp-25958---water-footprint--water-neutrality) for methodology.**
 
 ### HIPAA Compliance (If Health Data)
 

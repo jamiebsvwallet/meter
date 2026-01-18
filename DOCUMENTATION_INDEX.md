@@ -2,6 +2,14 @@
 
 ## Quick Navigation
 
+### 🌟 Unique Competitive Features
+- **[SOCIAL_INTELLIGENCE_FEATURE.md](./SOCIAL_INTELLIGENCE_FEATURE.md)** ⭐ **INDUSTRY FIRST** - Guardian Angel System
+  - AI-powered vulnerable customer detection
+  - "We Don't Just Prevent Leaks. We Save Lives."
+  - Life-saving technology using water usage patterns
+  - £1B+ UK market opportunity
+  - Ofwat C-MeX compliance & ODI rewards
+
 ### 🚀 Getting Started
 - **[GETTING_STARTED.md](./GETTING_STARTED.md)** - Start here! 5-minute quick start guide
 - **[QUICK_START.md](./QUICK_START.md)** - API examples and usage patterns
@@ -25,6 +33,32 @@
   - Monitoring & logging
   - Performance optimization
   - Troubleshooting
+
+### 🔒 Security & Compliance
+- **[COMPLETE_STANDARDS_SUMMARY.md](./COMPLETE_STANDARDS_SUMMARY.md)** ⭐ **START HERE** - Quick overview of all standards
+- **[SECURITY_COMPLIANCE_GUIDE.md](./SECURITY_COMPLIANCE_GUIDE.md)** - Security & compliance overview
+- **[ISO_WATER_COMPLIANCE.md](./ISO_WATER_COMPLIANCE.md)** ⭐ NEW - Water management ISO standards
+- **[ISO_COMPLIANCE_CHECKLIST.md](./ISO_COMPLIANCE_CHECKLIST.md)** ⭐ NEW - Full ISO compliance checklist
+- **[WATER_INDUSTRY_INTEGRATIONS.md](./WATER_INDUSTRY_INTEGRATIONS.md)** ⭐ NEW - SCADA, GIS, Ofwat, WITS, WaterML
+- **[ISO_IMPLEMENTATION_SUMMARY.md](./ISO_IMPLEMENTATION_SUMMARY.md)** - Implementation status summary
+
+**Implemented Standards:**
+- ISO/IEC 27001, 27002, 27045 (Information Security)
+- ISO 9001 (Quality Management)
+- ISO 14001 (Environmental Management)
+- ISO 55001 (Asset Management)
+- ISO 46001 (Water Efficiency Management)
+- ISO 24516-1 (Water Asset Management)
+- ISO/NP 25958 (Water Footprint & Neutrality)
+- GDPR, SOC2, HIPAA, PCI-DSS
+- **Ofwat AMP7/8** (UK Water Regulation)
+- **WaterML 2.0** (OGC Water Data Standard)
+- **WITS** (UK Water Industry Telemetry)
+
+**System Integrations:**
+- **SCADA** (Modbus TCP, OPC UA, DNP3, BACnet, MQTT)
+- **GIS** (ArcGIS, QGIS, PostGIS, GeoJSON, Shapefile)
+- **Historians** (OSIsoft PI, GE Proficy, Wonderware, InfluxDB)
 
 ### 📋 Setup Scripts
 - **[setup.sh](./setup.sh)** - Original setup script (deprecated)

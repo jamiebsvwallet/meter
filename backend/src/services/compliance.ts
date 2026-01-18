@@ -1,6 +1,7 @@
 /**
  * Compliance & Audit Logging Service
  * GDPR, HIPAA, SOC2, and industry compliance
+ * Includes water management and asset management ISO standards
  */
 
 import winston from 'winston'
@@ -10,8 +11,20 @@ export enum ComplianceStandard {
   GDPR = 'GDPR',
   HIPAA = 'HIPAA',
   SOC2 = 'SOC2',
-  ISO27001 = 'ISO27001',
-  PCI_DSS = 'PCI_DSS'
+  ISO27001 = 'ISO27001',          // Information security management
+  ISO27002 = 'ISO27002',          // Code of practice for information security controls
+  ISO27045 = 'ISO27045',          // Information security incident management
+  ISO9001 = 'ISO9001',            // Quality management systems
+  ISO14001 = 'ISO14001',          // Environmental management systems
+  ISO55001 = 'ISO55001',          // Asset management
+  ISO46001 = 'ISO46001',          // Water efficiency management systems (WEMS)
+  ISO24516_1 = 'ISO24516_1',      // Asset management for water supply and wastewater systems
+  ISO25958 = 'ISO25958',          // Water footprint and water neutrality
+  PCI_DSS = 'PCI_DSS',
+  OFWAT_AMP7 = 'OFWAT_AMP7',      // UK water regulation 2020-2025
+  OFWAT_AMP8 = 'OFWAT_AMP8',      // UK water regulation 2025-2030
+  WATERML_2 = 'WATERML_2',        // OGC WaterML 2.0 standard
+  WITS = 'WITS'                   // UK Water Industry Telemetry Systems
 }
 
 export enum AuditEventType {
@@ -36,7 +49,11 @@ export enum DataCategory {
   PAYMENT_DATA = 'PAYMENT_DATA',
   LOCATION_DATA = 'LOCATION_DATA',
   USAGE_PATTERNS = 'USAGE_PATTERNS',
-  HEALTH_DATA = 'HEALTH_DATA'
+  HEALTH_DATA = 'HEALTH_DATA',
+  ASSET_DATA = 'ASSET_DATA',              // Physical infrastructure assets
+  WATER_QUALITY = 'WATER_QUALITY',        // Water quality measurements
+  ENVIRONMENTAL_DATA = 'ENVIRONMENTAL_DATA', // Environmental impact data
+  MAINTENANCE_RECORDS = 'MAINTENANCE_RECORDS' // Equipment maintenance logs
 }
 
 interface AuditLog {
@@ -154,6 +171,38 @@ export class ComplianceService {
       retentionPeriodDays: 730, // 2 years
       complianceRequirements: [ComplianceStandard.SOC2],
       autoDeleteEnabled: true
+    })
+
+    // Asset data retention (ISO 55001, ISO 24516-1)
+    this.retentionPolicies.set(DataCategory.ASSET_DATA, {
+      dataCategory: DataCategory.ASSET_DATA,
+      retentionPeriodDays: 3650, // 10 years - typical for infrastructure assets
+      complianceRequirements: [ComplianceStandard.ISO55001, ComplianceStandard.ISO24516_1],
+      autoDeleteEnabled: false // Critical infrastructure data
+    })
+
+    // Water quality data (ISO 46001, ISO 24516-1)
+    this.retentionPolicies.set(DataCategory.WATER_QUALITY, {
+      dataCategory: DataCategory.WATER_QUALITY,
+      retentionPeriodDays: 1825, // 5 years - regulatory requirement
+      complianceRequirements: [ComplianceStandard.ISO46001, ComplianceStandard.ISO24516_1],
+      autoDeleteEnabled: false // Regulatory compliance data
+    })
+
+    // Environmental data (ISO 14001, ISO 25958)
+    this.retentionPolicies.set(DataCategory.ENVIRONMENTAL_DATA, {
+      dataCategory: DataCategory.ENVIRONMENTAL_DATA,
+      retentionPeriodDays: 2555, // 7 years - environmental regulations
+      complianceRequirements: [ComplianceStandard.ISO14001, ComplianceStandard.ISO25958],
+      autoDeleteEnabled: false
+    })
+
+    // Maintenance records (ISO 9001, ISO 55001)
+    this.retentionPolicies.set(DataCategory.MAINTENANCE_RECORDS, {
+      dataCategory: DataCategory.MAINTENANCE_RECORDS,
+      retentionPeriodDays: 3650, // 10 years - asset lifecycle
+      complianceRequirements: [ComplianceStandard.ISO9001, ComplianceStandard.ISO55001],
+      autoDeleteEnabled: false
     })
   }
 
