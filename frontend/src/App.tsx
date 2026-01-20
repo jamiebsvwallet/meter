@@ -332,6 +332,24 @@ const App: React.FC = () => {
             <PhotoJobReport onBack={() => setSelectedFeature(null)} />
           ) : selectedFeature === 'pilot-signup' ? (
             <PilotSignup onBack={() => setSelectedFeature(null)} />
+          ) : selectedFeature === 'advanced-leak-detection' ? (
+            <div style={{ padding: '2em' }}>
+              <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
+              <Typography variant="h4" gutterBottom>Advanced Leak Detection</Typography>
+              <Typography variant="body1" paragraph>
+                This feature includes 5 breakthrough capabilities:
+              </Typography>
+              <ul>
+                <li><strong>Smart Water Data Overlay</strong> - Real-time consumption analysis</li>
+                <li><strong>Neighborhood Leak Mapping</strong> - Cross-property intelligence</li>
+                <li><strong>3D Pipe Infrastructure</strong> - Complete digital twin</li>
+                <li><strong>Acoustic Signature Analysis</strong> - AI-powered leak detection</li>
+                <li><strong>Failure Hotspot Heat Map</strong> - Predictive maintenance</li>
+              </ul>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                Backend API endpoints are ready at /api/advanced-leak-detection/
+              </Typography>
+            </div>
           ) : selectedFeature === 'feature-history' ? (
             <FeatureHistory onBack={() => setSelectedFeature(null)} />
           ) : (

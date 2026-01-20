@@ -172,6 +172,47 @@ const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
 
     // Business Features
     {
+      id: 'photo-job-report',
+      title: 'Photo Job Reports',
+      description: 'Professional photo documentation with blockchain verification. Before/after photos with digital twin mapping.',
+      icon: <CameraAlt fontSize="large" />,
+      color: '#4CAF50',
+      stats: {
+        label: 'Reports Created',
+        value: '0'
+      },
+      badge: 0,
+      path: '/job-reports/photo',
+      category: 'business'
+    },
+    {
+      id: 'advanced-leak-detection',
+      title: 'Advanced Leak Detection',
+      description: '5 breakthrough features: Smart meter overlay, neighborhood mapping, 3D infrastructure, acoustic analysis, hotspot prediction.',
+      icon: <WaterDrop fontSize="large" />,
+      color: '#2196F3',
+      stats: {
+        label: 'Reports',
+        value: '0'
+      },
+      badge: 0,
+      path: '/leak-detection/advanced',
+      category: 'business'
+    },
+    {
+      id: 'pilot-signup',
+      title: 'Pilot Program Signup',
+      description: 'Recruit customers for water management pilot. Track signups and conversions.',
+      icon: <EmojiEvents fontSize="large" />,
+      color: '#FF9800',
+      stats: {
+        label: 'Signups',
+        value: '0'
+      },
+      path: '/pilot/signup',
+      category: 'business'
+    },
+    {
       id: 'marketplace',
       title: 'Data Marketplace',
       description: 'Sell water data or buy analytics. API usage and revenue tracking.',
