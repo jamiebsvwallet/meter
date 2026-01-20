@@ -163,7 +163,7 @@ export const PlumbingEducationGameVR: React.FC = () => {
     // Load level
     loadLevel(currentLevel, scene)
 
-    // Mouse interaction
+    // Mouse and Touch interaction
     const onPointerMove = (event: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect()
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
@@ -184,29 +184,36 @@ export const PlumbingEducationGameVR: React.FC = () => {
       }
     }
 
-    const onPointerDown = () => {
+    const onPointerDown = (event: PointerEvent) => {
       if (!isPlaying) return
+
+      // Update mouse position for touch
+      const rect = renderer.domElement.getBoundingClientRect()
+      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
       raycasterRef.current.setFromCamera(mouseRef.current, camera)
       const fittingIntersects = raycasterRef.current.intersectObjects(fittingObjects.current)
 
       if (fittingIntersects.length > 0) {
-        // Pick up fitting
+        // Pick up fitting (works with touch on Android)
         const fitting = fittingIntersects[0].object as THREE.Mesh
         draggedObjectRef.current = fitting
         fitting.scale.set(1.2, 1.2, 1.2) // Slightly enlarge when picked up
         if (handCursorRef.current) {
           handCursorRef.current.children[0].scale.set(0.8, 0.8, 0.8) // Close hand
         }
+        event.preventDefault() // Prevent scrolling on mobile
       } else {
         const intersects = raycasterRef.current.intersectObjects(interactableObjects.current)
         if (intersects.length > 0) {
           handleInteraction(intersects[0].object as THREE.Mesh)
+          event.preventDefault()
         }
       }
     }
 
-    const onPointerUp = () => {
+    const onPointerUp = (event: PointerEvent) => {
       if (!isPlaying || !draggedObjectRef.current) return
 
       // Check if fitting is placed in correct target zone
@@ -242,11 +249,15 @@ export const PlumbingEducationGameVR: React.FC = () => {
       if (handCursorRef.current) {
         handCursorRef.current.children[0].scale.set(1, 1, 1) // Open hand
       }
+      event.preventDefault()
     }
 
     renderer.domElement.addEventListener('pointermove', onPointerMove)
     renderer.domElement.addEventListener('pointerdown', onPointerDown)
     renderer.domElement.addEventListener('pointerup', onPointerUp)
+    // Also listen for touch events explicitly for better Android support
+    renderer.domElement.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false })
+    renderer.domElement.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false })
 
     // Create 3D hand cursor
     const handCursor = create3DHandCursor()
@@ -852,12 +863,102 @@ export const PlumbingEducationGameVR: React.FC = () => {
     if (!rendererRef.current || !xrSupported) return
 
     try {
-      const session = await (navigator as any).xr.requestSession('immersive-vr')
+      // Request immersive VR session with hand tracking if available
+      const session = await (navigator as any).xr.requestSession('immersive-vr', {
+        optionalFeatures: ['hand-tracking', 'local-floor', 'bounded-floor']
+      })
       setVRSession(session)
       await rendererRef.current.xr.setSession(session)
+
+      // Add VR controllers
+      if (sceneRef.current) {
+        const controller1 = rendererRef.current.xr.getController(0)
+        const controller2 = rendererRef.current.xr.getController(1)
+        
+        // Controller event handlers
+        controller1.addEventListener('selectstart', onVRSelectStart)
+        controller2.addEventListener('selectstart', onVRSelectStart)
+        controller1.addEventListener('selectend', onVRSelectEnd)
+        controller2.addEventListener('selectend', onVRSelectEnd)
+
+        sceneRef.current.add(controller1)
+        sceneRef.current.add(controller2)
+
+        // Visual controller representations (hands)
+        const controllerModelFactory = new (THREE as any).XRControllerModelFactory?.()
+        if (controllerModelFactory) {
+          const controllerGrip1 = rendererRef.current.xr.getControllerGrip(0)
+          const controllerGrip2 = rendererRef.current.xr.getControllerGrip(1)
+          
+          controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1))
+          controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2))
+          
+          sceneRef.current.add(controllerGrip1)
+          sceneRef.current.add(controllerGrip2)
+        }
+      }
     } catch (error) {
       console.error('Failed to enter VR mode:', error)
+      alert('VR Mode Error: Make sure you\'re using Meta Quest Browser and have granted VR permissions')
     }
+  }
+
+  const onVRSelectStart = (event: any) => {
+    const controller = event.target
+    if (!sceneRef.current || !isPlaying) return
+
+    // Raycast from VR controller
+    const tempMatrix = new THREE.Matrix4()
+    tempMatrix.identity().extractRotation(controller.matrixWorld)
+    const raycaster = new THREE.Raycaster()
+    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld)
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
+
+    // Check for fitting intersections
+    const fittingIntersects = raycaster.intersectObjects(fittingObjects.current)
+    if (fittingIntersects.length > 0) {
+      const fitting = fittingIntersects[0].object as THREE.Mesh
+      draggedObjectRef.current = fitting
+      fitting.scale.set(1.2, 1.2, 1.2)
+      // Attach to controller
+      controller.userData.selectedObject = fitting
+    }
+  }
+
+  const onVRSelectEnd = (event: any) => {
+    const controller = event.target
+    if (!controller.userData.selectedObject || !isPlaying) return
+
+    const fitting = controller.userData.selectedObject as THREE.Mesh
+    
+    // Check if placed in target zone
+    const raycaster = new THREE.Raycaster()
+    const tempMatrix = new THREE.Matrix4()
+    tempMatrix.identity().extractRotation(controller.matrixWorld)
+    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld)
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
+
+    const targetIntersects = raycaster.intersectObjects(targetZones.current)
+    if (targetIntersects.length > 0) {
+      const target = targetIntersects[0].object as THREE.Mesh
+      if (target.userData.requiredFitting === fitting.userData.fittingType) {
+        // Correct!
+        fitting.position.copy(target.position)
+        fitting.scale.set(1, 1, 1)
+        target.material = new THREE.MeshStandardMaterial({ color: 0x00ff00, opacity: 0.3, transparent: true })
+        setScore(prev => prev + 100)
+        setCompletedTasks(prev => prev + 1)
+        fittingObjects.current = fittingObjects.current.filter(f => f !== fitting)
+      } else {
+        fitting.scale.set(1, 1, 1)
+        setScore(prev => Math.max(0, prev - 50))
+      }
+    } else {
+      fitting.scale.set(1, 1, 1)
+    }
+
+    controller.userData.selectedObject = null
+    draggedObjectRef.current = null
   }
 
   const level = GAME_LEVELS.find(l => l.id === currentLevel)
@@ -899,8 +1000,13 @@ export const PlumbingEducationGameVR: React.FC = () => {
             </Button>
           )}
           {xrSupported && (
-            <Button variant="outlined" onClick={enterVRMode}>
-              🥽 Enter VR Mode
+            <Button variant="outlined" onClick={enterVRMode} color="secondary">
+              🥽 Enter Meta Quest VR
+            </Button>
+          )}
+          {!xrSupported && (
+            <Button variant="outlined" disabled title="Open in Meta Quest Browser to enable VR">
+              🥽 VR Not Available
             </Button>
           )}
         </Box>
@@ -1012,12 +1118,13 @@ export const PlumbingEducationGameVR: React.FC = () => {
               color: 'white',
               p: 1,
               borderRadius: 1,
-              zIndex: 10
+              zIndex: 10,
+              fontSize: '0.7rem'
             }}
           >
-            🖐️ Use mouse to control 3D hand
-            <br />
-            Click & drag to pick up fittings
+            📱 Touch/Tap to interact<br />
+            🖐️ Drag fittings to targets<br />
+            🥽 VR: Use Quest Browser
           </Typography>
         )}
       </Box>
