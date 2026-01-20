@@ -60,6 +60,7 @@
   "dependencies": {
     "@bsv/overlay": "^0.1.17",
     "@bsv/sdk": "^1.2.8",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
@@ -74,6 +75,7 @@
     "ml-matrix": "^6.11.1",
     "ml-regression": "^6.1.2",
     "mongodb": "^6.11.0",
+    "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "scrypt-ts": "^1.4.3",
     "scrypt-ts-lib": "^0.1.28",

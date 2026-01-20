@@ -57,6 +57,27 @@ export class JobReport extends SmartContract {
     @prop(true)
     digitalTwinData: ByteString // JSON with 3D coordinates of work location
 
+    @prop(true)
+    smartMeterDataHash: ByteString // Hash of smart meter readings overlay
+
+    @prop(true)
+    neighborLeakDataHash: ByteString // Hash of neighborhood leak correlation data
+
+    @prop(true)
+    pipeInfrastructureHash: ByteString // Hash of 3D pipe mapping data
+
+    @prop(true)
+    acousticSignatureHash: ByteString // Hash of acoustic leak analysis
+
+    @prop(true)
+    failureHotspotHash: ByteString // Hash of failure hotspot heat map data
+
+    @prop(true)
+    consentRecordsHash: ByteString // Hash of data sharing consent records
+
+    @prop(true)
+    dataTimestamp: bigint // Timestamp when all data was captured
+
     constructor(
         jobId: ByteString,
         propertyId: ByteString,
@@ -71,7 +92,14 @@ export class JobReport extends SmartContract {
         photoHashes: ByteString,
         photoCount: bigint,
         videoHashes: ByteString,
-        digitalTwinData: ByteString
+        digitalTwinData: ByteString,
+        smartMeterDataHash: ByteString,
+        neighborLeakDataHash: ByteString,
+        pipeInfrastructureHash: ByteString,
+        acousticSignatureHash: ByteString,
+        failureHotspotHash: ByteString,
+        consentRecordsHash: ByteString,
+        dataTimestamp: bigint
     ) {
         super(...arguments)
         this.jobId = jobId
@@ -84,6 +112,17 @@ export class JobReport extends SmartContract {
         this.cost = cost
         this.status = status
         this.customerApproved = customerApproved
+        this.photoHashes = photoHashes
+        this.photoCount = photoCount
+        this.videoHashes = videoHashes
+        this.digitalTwinData = digitalTwinData
+        this.smartMeterDataHash = smartMeterDataHash
+        this.neighborLeakDataHash = neighborLeakDataHash
+        this.pipeInfrastructureHash = pipeInfrastructureHash
+        this.acousticSignatureHash = acousticSignatureHash
+        this.failureHotspotHash = failureHotspotHash
+        this.consentRecordsHash = consentRecordsHash
+        this.dataTimestamp = dataTimestamp
     }
 
     /**

@@ -14,6 +14,7 @@ import { createAuthRouter } from './api/auth.routes.js'
 import { createAgentRouter } from './api/agent.routes.js'
 import { createZoneAcousticRouter } from './api/zones.routes.js'
 import { createForecastRouter } from './api/forecast.routes.js'
+import advancedLeakDetectionRoutes from './api/advanced-leak-detection.routes.js'
 import { PlumbingService } from './lookup-services/PlumbingService.js'
 import { BlockchainService } from './services/blockchain.js'
 import { mlPredictionService } from './services/ml-prediction.js'
@@ -315,7 +316,12 @@ async function startServer(): Promise<void> {
     app.use('/api/auth', createAuthRouter(getDatabase()))
     app.use('/api/agent', createAgentRouter(getDatabase()))
     app.use('/api/zones', createZoneAcousticRouter(getDatabase()))
-    app.use('/api/forecast', createForecastRouter())    
+    app.use('/api/forecast', createForecastRouter())
+    
+    // Advanced Leak Detection routes (5 breakthrough features)
+    app.use('/api/advanced-leak-detection', advancedLeakDetectionRoutes)
+    console.log('✓ Advanced Leak Detection routes registered')
+    
     // Quantum technology routes
     const quantumRoutes = await import('./api/quantum.routes.js')
     app.use('/api/quantum', quantumRoutes.default)
