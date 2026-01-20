@@ -611,23 +611,6 @@ export const PlumbingEducationGameVR: React.FC = () => {
     scene.add(bench)
   }
 
-      // Leak particles
-      for (let j = 0; j < 15; j++) {
-        const particle = new THREE.Mesh(
-          new THREE.SphereGeometry(0.05),
-          new THREE.MeshBasicMaterial({ color: 0x0088ff })
-        )
-        particle.position.set(
-          pos.x + Math.random() * 0.3 - 0.15,
-          pos.y + Math.random() * 2,
-          pos.z + Math.random() * 0.3 - 0.15
-        )
-        particle.name = `water-particle-joint-${i}`
-        scene.add(particle)
-      }
-    })
-  }
-
   const createLevel3FixtureInstallation = (scene: THREE.Scene) => {
     const fixtures = [
       { x: -5, y: 2, z: 0, type: 'faucet' },
