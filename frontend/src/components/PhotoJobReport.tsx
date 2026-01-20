@@ -701,3 +701,5 @@ export const PhotoJobReport: React.FC = () => {
     </Container>
   )
 }
+
+export default PhotoJobReport

@@ -475,3 +475,5 @@ export const PilotSignup: React.FC = () => {
     </Box>
   )
 }
+
+export default PilotSignup
