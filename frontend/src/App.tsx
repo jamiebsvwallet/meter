@@ -310,6 +310,14 @@ const App: React.FC = () => {
           <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
             Meter — Counters, Up and Down.
           </Typography>
+          <Button 
+            color="inherit" 
+            startIcon={<DashboardIcon />}
+            onClick={() => setShowDashboard(!showDashboard)}
+            sx={{ mr: 2 }}
+          >
+            {showDashboard ? 'Meters' : 'Dashboard'}
+          </Button>
           <GitHubIconStyle onClick={() => window.open('https://github.com/p2ppsr/meter', '_blank')}>
             <GitHubIcon />
           </GitHubIconStyle>
@@ -317,53 +325,73 @@ const App: React.FC = () => {
       </AppBar>
       <AppBarPlaceholder />
 
-      {meters.length >= 1 && (
-        <AddMoreFab color='primary' onClick={() => { setCreateOpen(true) }}>
-          <AddIcon />
-        </AddMoreFab>
-      )}
-
-      {metersLoading
-        ? (<LoadingBar />)
-        : (
-          <List>
-            {meters.length === 0 && (
-              <NoItems container direction='column' justifyContent='center' alignItems='center'>
-                <Grid item align='center'>
-                  <Typography variant='h4'>No Meters</Typography>
-                  <Typography color='textSecondary'>
-                    Use the button below to start a meter
-                  </Typography>
-                </Grid>
-                <Grid item align='center' sx={{ paddingTop: '2.5em', marginBottom: '1em' }}>
-                  <Fab color='primary' onClick={() => { setCreateOpen(true) }}>
-                    <AddIcon />
-                  </Fab>
-                </Grid>
-              </NoItems>
-            )}
-            {meters.map((x, i) => (
-              <ListItem key={i}>
-                <Button onClick={() => handleDecrement(i)}>Decrement</Button>
-                <Typography>{x.value}</Typography>
-                <Button onClick={() => handleIncrement(i)}>Increment</Button>
-                <IdentityCard
-                  themeMode='dark'
-                  identityKey={x.creatorIdentityKey}
-                />
-              </ListItem>
-            ))}
-          </List>
-        )
-      }
-
-      {/* 3D VR Placeholder */}
-      <div className="vr-section">
-        <Typography variant='h5' sx={{ paddingTop: '1.5em' }}>3D VR Placeholder</Typography>
-        <Suspense fallback={<div style={{ padding: '1em' }}>Loading 3D...</div>}>
-          <VRPlaceholder />
+      {/* Dashboard Feature System */}
+      {showDashboard ? (
+        <Suspense fallback={<LoadingBar />}>
+          {selectedFeature === 'photo-job-report' ? (
+            <PhotoJobReport onBack={() => setSelectedFeature(null)} />
+          ) : selectedFeature === 'pilot-signup' ? (
+            <PilotSignup onBack={() => setSelectedFeature(null)} />
+          ) : selectedFeature === 'feature-history' ? (
+            <FeatureHistory onBack={() => setSelectedFeature(null)} />
+          ) : (
+            <UnifiedDashboard 
+              onFeatureSelect={(feature) => setSelectedFeature(feature)}
+              userType={userType}
+            />
+          )}
         </Suspense>
-      </div>
+      ) : (
+        <>
+          {meters.length >= 1 && (
+            <AddMoreFab color='primary' onClick={() => { setCreateOpen(true) }}>
+              <AddIcon />
+            </AddMoreFab>
+          )}
+
+          {metersLoading
+            ? (<LoadingBar />)
+            : (
+              <List>
+                {meters.length === 0 && (
+                  <NoItems container direction='column' justifyContent='center' alignItems='center'>
+                    <Grid item align='center'>
+                      <Typography variant='h4'>No Meters</Typography>
+                      <Typography color='textSecondary'>
+                        Use the button below to start a meter
+                      </Typography>
+                    </Grid>
+                    <Grid item align='center' sx={{ paddingTop: '2.5em', marginBottom: '1em' }}>
+                      <Fab color='primary' onClick={() => { setCreateOpen(true) }}>
+                        <AddIcon />
+                      </Fab>
+                    </Grid>
+                  </NoItems>
+                )}
+                {meters.map((x, i) => (
+                  <ListItem key={i}>
+                    <Button onClick={() => handleDecrement(i)}>Decrement</Button>
+                    <Typography>{x.value}</Typography>
+                    <Button onClick={() => handleIncrement(i)}>Increment</Button>
+                    <IdentityCard
+                      themeMode='dark'
+                      identityKey={x.creatorIdentityKey}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )
+          }
+
+          {/* 3D VR Placeholder */}
+          <div className="vr-section">
+            <Typography variant='h5' sx={{ paddingTop: '1.5em' }}>3D VR Placeholder</Typography>
+            <Suspense fallback={<div style={{ padding: '1em' }}>Loading 3D...</div>}>
+              <VRPlaceholder />
+            </Suspense>
+          </div>
+        </>
+      )}
 
       <Dialog open={createOpen} onClose={() => { setCreateOpen(false) }}>
         <form onSubmit={(e) => {
