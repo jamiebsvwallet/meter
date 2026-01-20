@@ -9,10 +9,13 @@ import {
 import { styled } from '@mui/system'
 import AddIcon from '@mui/icons-material/Add'
 import GitHubIcon from '@mui/icons-material/GitHub'
+import DashboardIcon from '@mui/icons-material/Dashboard'
 import useAsyncEffect from 'use-async-effect'
 import { type Meter, type Token } from './types/types'
 import './App.scss'
 const VRPlaceholder = React.lazy(() => import('./components/VRPlaceholder'))
+const UnifiedDashboard = React.lazy(() => import('./components/UnifiedDashboard'))
+const FeatureHistory = React.lazy(() => import('./components/FeatureHistory'))
 import { IdentityCard } from 'metanet-identity-react'
 
 // Heavy blockchain SDKs and contract libraries are dynamically imported where needed to reduce initial bundle size.
@@ -51,6 +54,9 @@ const App: React.FC = () => {
   const [createLoading, setCreateLoading] = useState<boolean>(false)
   const [metersLoading, setMetersLoading] = useState<boolean>(true)
   const [meters, setMeters] = useState<Meter[]>([])
+  const [showDashboard, setShowDashboard] = useState<boolean>(false)
+  const [selectedFeature, setSelectedFeature] = useState<string | null>(null)
+  const [userType] = useState<'consumer' | 'business' | 'admin'>('consumer') // Set based on login
 
   // Creates a new meter.
   // This function will run when the user clicks "OK" in the creation dialog.
