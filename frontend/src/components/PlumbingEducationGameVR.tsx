@@ -90,6 +90,8 @@ export const PlumbingEducationGameVR: React.FC = () => {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster())
   const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2())
+  const handCursorRef = useRef<THREE.Group | null>(null)
+  const draggedObjectRef = useRef<THREE.Mesh | null>(null)
   
   const [currentLevel, setCurrentLevel] = useState<number>(1)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -102,8 +104,13 @@ export const PlumbingEducationGameVR: React.FC = () => {
   const [showInstructions, setShowInstructions] = useState(true)
   const [xrSupported, setXrSupported] = useState(false)
   const [vrSession, setVRSession] = useState<XRSession | null>(null)
+  const [clipboardText, setClipboardText] = useState<string[]>([])
+  const [showClipboard, setShowClipboard] = useState(true)
+  const [availableFittings, setAvailableFittings] = useState<string[]>([])
   
   const interactableObjects = useRef<THREE.Mesh[]>([])
+  const fittingObjects = useRef<THREE.Mesh[]>([])
+  const targetZones = useRef<THREE.Mesh[]>([])
 
   useEffect(() => {
     // Check XR support
@@ -161,21 +168,90 @@ export const PlumbingEducationGameVR: React.FC = () => {
       const rect = renderer.domElement.getBoundingClientRect()
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+      // Update 3D hand cursor position
+      if (handCursorRef.current) {
+        raycasterRef.current.setFromCamera(mouseRef.current, camera)
+        const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), -10)
+        const intersection = new THREE.Vector3()
+        raycasterRef.current.ray.intersectPlane(planeZ, intersection)
+        handCursorRef.current.position.copy(intersection)
+
+        // If dragging, move object with hand
+        if (draggedObjectRef.current) {
+          draggedObjectRef.current.position.copy(intersection)
+        }
+      }
     }
 
     const onPointerDown = () => {
       if (!isPlaying) return
 
       raycasterRef.current.setFromCamera(mouseRef.current, camera)
-      const intersects = raycasterRef.current.intersectObjects(interactableObjects.current)
+      const fittingIntersects = raycasterRef.current.intersectObjects(fittingObjects.current)
 
-      if (intersects.length > 0) {
-        handleInteraction(intersects[0].object as THREE.Mesh)
+      if (fittingIntersects.length > 0) {
+        // Pick up fitting
+        const fitting = fittingIntersects[0].object as THREE.Mesh
+        draggedObjectRef.current = fitting
+        fitting.scale.set(1.2, 1.2, 1.2) // Slightly enlarge when picked up
+        if (handCursorRef.current) {
+          handCursorRef.current.children[0].scale.set(0.8, 0.8, 0.8) // Close hand
+        }
+      } else {
+        const intersects = raycasterRef.current.intersectObjects(interactableObjects.current)
+        if (intersects.length > 0) {
+          handleInteraction(intersects[0].object as THREE.Mesh)
+        }
+      }
+    }
+
+    const onPointerUp = () => {
+      if (!isPlaying || !draggedObjectRef.current) return
+
+      // Check if fitting is placed in correct target zone
+      raycasterRef.current.setFromCamera(mouseRef.current, camera)
+      const targetIntersects = raycasterRef.current.intersectObjects(targetZones.current)
+
+      if (targetIntersects.length > 0) {
+        const target = targetIntersects[0].object as THREE.Mesh
+        const fitting = draggedObjectRef.current
+
+        // Check if correct fitting for this zone
+        if (target.userData.requiredFitting === fitting.userData.fittingType) {
+          // Correct placement!
+          fitting.position.copy(target.position)
+          fitting.scale.set(1, 1, 1)
+          target.material = new THREE.MeshStandardMaterial({ color: 0x00ff00, opacity: 0.3, transparent: true })
+          setScore(prev => prev + 100)
+          setCompletedTasks(prev => prev + 1)
+          fittingObjects.current = fittingObjects.current.filter(f => f !== fitting)
+        } else {
+          // Wrong fitting!
+          fitting.scale.set(1, 1, 1)
+          setScore(prev => Math.max(0, prev - 50))
+        }
+      } else {
+        // Not placed in zone, reset
+        if (draggedObjectRef.current) {
+          draggedObjectRef.current.scale.set(1, 1, 1)
+        }
+      }
+
+      draggedObjectRef.current = null
+      if (handCursorRef.current) {
+        handCursorRef.current.children[0].scale.set(1, 1, 1) // Open hand
       }
     }
 
     renderer.domElement.addEventListener('pointermove', onPointerMove)
     renderer.domElement.addEventListener('pointerdown', onPointerDown)
+    renderer.domElement.addEventListener('pointerup', onPointerUp)
+
+    // Create 3D hand cursor
+    const handCursor = create3DHandCursor()
+    scene.add(handCursor)
+    handCursorRef.current = handCursor
 
     // Animation loop
     let frameId: number
@@ -219,12 +295,50 @@ export const PlumbingEducationGameVR: React.FC = () => {
       cancelAnimationFrame(frameId)
       renderer.domElement.removeEventListener('pointermove', onPointerMove)
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
+      renderer.domElement.removeEventListener('pointerup', onPointerUp)
       renderer.dispose()
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement)
       }
     }
   }, [currentLevel, isPlaying])
+
+  const create3DHandCursor = (): THREE.Group => {
+    const handGroup = new THREE.Group()
+    
+    // Palm
+    const palmGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.2)
+    const handMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffdbac, 
+      roughness: 0.7,
+      metalness: 0.1 
+    })
+    const palm = new THREE.Mesh(palmGeometry, handMaterial)
+    handGroup.add(palm)
+
+    // Fingers
+    for (let i = 0; i < 4; i++) {
+      const finger = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8),
+        handMaterial
+      )
+      finger.position.set(-0.2 + i * 0.15, 0.35, 0)
+      finger.rotation.z = Math.PI / 2
+      handGroup.add(finger)
+    }
+
+    // Thumb
+    const thumb = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.1, 0.4, 8),
+      handMaterial
+    )
+    thumb.position.set(-0.4, -0.1, 0)
+    thumb.rotation.z = Math.PI / 4
+    handGroup.add(thumb)
+
+    handGroup.scale.set(0.5, 0.5, 0.5)
+    return handGroup
+  }
 
   useEffect(() => {
     if (!isPlaying || isPaused) return
@@ -245,10 +359,13 @@ export const PlumbingEducationGameVR: React.FC = () => {
   const loadLevel = (levelId: number, scene: THREE.Scene) => {
     // Clear previous level objects
     interactableObjects.current = []
+    fittingObjects.current = []
+    targetZones.current = []
     scene.children = scene.children.filter(child => 
       child instanceof THREE.Light || 
       child.name === 'room-floor' || 
-      child.name.startsWith('room-wall')
+      child.name.startsWith('room-wall') ||
+      child === handCursorRef.current
     )
 
     const level = GAME_LEVELS.find(l => l.id === levelId)
@@ -256,33 +373,97 @@ export const PlumbingEducationGameVR: React.FC = () => {
 
     switch (levelId) {
       case 1:
+        setClipboardText([
+          '⚠️ EMERGENCY: 5 VALVES LEAKING',
+          '',
+          'Problem:',
+          '- Multiple shut-off valves are open',
+          '- Water is flooding the property',
+          '- Customer is panicking',
+          '',
+          'Your Task:',
+          '✓ Click each red valve to close it',
+          '✓ Close all 5 valves within 30 seconds',
+          '✓ Prevent further water damage'
+        ])
+        setAvailableFittings([])
         createLevel1ValveControl(scene)
         setTotalTasks(5)
         break
       case 2:
+        setClipboardText([
+          '🔧 REPAIR ORDER: PIPE JOINTS',
+          '',
+          'Problem:',
+          '- 4 pipe joints are damaged and leaking',
+          '- Old compression fittings have failed',
+          '- Need immediate repair',
+          '',
+          'Available Fittings:',
+          '• Compression Fitting (brass)',
+          '• Push-Fit Connector',
+          '• Copper Coupling',
+          '• Slip Joint',
+          '',
+          'Your Task:',
+          '✓ Pick up the correct fitting',
+          '✓ Drag it to the damaged joint',
+          '✓ Match fitting type to pipe size',
+          '✓ Complete all 4 repairs'
+        ])
+        setAvailableFittings(['Compression', 'Push-Fit', 'Coupling', 'Slip Joint'])
         createLevel2PipeJointRepair(scene)
         setTotalTasks(4)
         break
       case 3:
+        setClipboardText([
+          '🚿 INSTALLATION: BATHROOM FIXTURES',
+          '',
+          'Problem:',
+          '- New bathroom needs fixtures installed',
+          '- Must follow plumbing codes',
+          '- Ensure proper sealing',
+          '',
+          'Required Fixtures:',
+          '• Faucet with aerator',
+          '• Shower head assembly',
+          '• Toilet flush valve',
+          '',
+          'Your Task:',
+          '✓ Pick up each fixture',
+          '✓ Install in correct location',
+          '✓ Check for leaks',
+          '✓ Pass code inspection'
+        ])
+        setAvailableFittings(['Faucet', 'Shower Head', 'Flush Valve'])
         createLevel3FixtureInstallation(scene)
         setTotalTasks(3)
         break
       case 4:
+        setClipboardText([
+          '🎧 LEAK DETECTION CHALLENGE',
+          '',
+          'Problem:',
+          '- Customer hears water running',
+          '- No visible leaks found',
+          '- Hidden leaks suspected',
+          '',
+          'Equipment:',
+          '• Acoustic Leak Sensor',
+          '',
+          'Your Task:',
+          '✓ Use sensor to detect sound',
+          '✓ Find 3 hidden leaks',
+          '✓ Mark leak locations'
+        ])
+        setAvailableFittings([])
         createLevel4LeakDetection(scene)
         setTotalTasks(3)
         break
-      case 5:
-        createLevel5EmergencyResponse(scene)
-        setTotalTasks(6)
-        break
-      case 6:
-        createLevel6ComplexDiagnosis(scene)
-        setTotalTasks(8)
-        break
-      case 7:
-        createLevel7MasterCertification(scene)
-        setTotalTasks(12)
-        break
+      default:
+        setClipboardText(['Level ' + levelId, '', 'More content coming soon...'])
+        setAvailableFittings([])
+        setTotalTasks(1)
     }
   }
 
@@ -346,27 +527,89 @@ export const PlumbingEducationGameVR: React.FC = () => {
   }
 
   const createLevel2PipeJointRepair = (scene: THREE.Scene) => {
+    const fittingTypes = ['Compression', 'Push-Fit', 'Coupling', 'Slip Joint']
     const positions = [
-      { x: -6, y: 3, z: 0 },
-      { x: -2, y: 4, z: -3 },
-      { x: 3, y: 2, z: 2 },
-      { x: 7, y: 3.5, z: -1 }
+      { x: -6, y: 3, z: 0, required: 'Compression' },
+      { x: -2, y: 4, z: -3, required: 'Push-Fit' },
+      { x: 3, y: 2, z: 2, required: 'Coupling' },
+      { x: 7, y: 3.5, z: -1, required: 'Slip Joint' }
     ]
 
+    // Create target zones (damaged joints needing repair)
     positions.forEach((pos, i) => {
-      // Damaged joint
-      const joint = new THREE.Mesh(
+      const targetZone = new THREE.Mesh(
         new THREE.TorusGeometry(0.5, 0.2, 16, 32),
         new THREE.MeshStandardMaterial({
           color: 0xff6600,
           emissive: 0xff6600,
-          emissiveIntensity: 0
+          emissiveIntensity: 0.5,
+          transparent: true,
+          opacity: 0.7
         })
       )
-      joint.position.set(pos.x, pos.y, pos.z)
-      joint.userData = { type: 'damaged-joint', repaired: false, levelId: 2, taskId: i }
-      interactableObjects.current.push(joint)
-      scene.add(joint)
+      targetZone.position.set(pos.x, pos.y, pos.z)
+      targetZone.userData = { type: 'target-zone', requiredFitting: pos.required, levelId: 2, taskId: i }
+      targetZones.current.push(targetZone)
+      scene.add(targetZone)
+
+      // Leak particles around damaged joint
+      for (let j = 0; j < 15; j++) {
+        const particle = new THREE.Mesh(
+          new THREE.SphereGeometry(0.05),
+          new THREE.MeshBasicMaterial({ color: 0x0088ff })
+        )
+        particle.position.set(
+          pos.x + Math.random() * 0.5 - 0.25,
+          pos.y + Math.random() * 1.5,
+          pos.z + Math.random() * 0.5 - 0.25
+        )
+        particle.name = `leak-${i}`
+        scene.add(particle)
+      }
+    })
+
+    // Create draggable fittings on workbench
+    fittingTypes.forEach((type, i) => {
+      const fitting = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 0.6, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0xFFD700,
+          metalness: 0.7,
+          roughness: 0.3
+        })
+      )
+      fitting.position.set(-8 + i * 4, 0.5, 8)
+      fitting.userData = { fittingType: type, draggable: true }
+      fittingObjects.current.push(fitting)
+      scene.add(fitting)
+
+      // Label
+      const labelCanvas = document.createElement('canvas')
+      labelCanvas.width = 128
+      labelCanvas.height = 64
+      const ctx = labelCanvas.getContext('2d')!
+      ctx.fillStyle = 'white'
+      ctx.font = 'bold 14px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText(type, 64, 32)
+      const labelTexture = new THREE.CanvasTexture(labelCanvas)
+      const labelMaterial = new THREE.MeshBasicMaterial({ map: labelTexture, transparent: true })
+      const label = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 1),
+        labelMaterial
+      )
+      label.position.set(0, 1, 0)
+      fitting.add(label)
+    })
+
+    // Workbench
+    const bench = new THREE.Mesh(
+      new THREE.BoxGeometry(18, 0.2, 3),
+      new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+    )
+    bench.position.set(0, 0, 8)
+    scene.add(bench)
+  }
 
       // Leak particles
       for (let j = 0; j < 15; j++) {
@@ -688,9 +931,113 @@ export const PlumbingEducationGameVR: React.FC = () => {
           border: '2px solid',
           borderColor: 'divider',
           borderRadius: 2,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative'
         }}
-      />
+      >
+        {/* Clipboard Overlay */}
+        {isPlaying && showClipboard && (
+          <Paper
+            sx={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              width: 280,
+              maxHeight: 400,
+              overflow: 'auto',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              p: 2,
+              zIndex: 10,
+              boxShadow: 3
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="h6" sx={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
+                📋 Work Order
+              </Typography>
+              <Button size="small" onClick={() => setShowClipboard(false)}>✕</Button>
+            </Box>
+            {clipboardText.map((line, idx) => (
+              <Typography
+                key={idx}
+                variant="body2"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontFamily: line.startsWith('✓') || line.startsWith('•') ? 'monospace' : 'inherit',
+                  fontWeight: line.includes('Problem:') || line.includes('Task:') || line.includes('Available') ? 'bold' : 'normal',
+                  color: line.startsWith('⚠️') || line.startsWith('🔧') || line.startsWith('🚿') || line.startsWith('🎧') ? 'error.main' : 'text.primary',
+                  whiteSpace: 'pre-wrap'
+                }}
+              >
+                {line}
+              </Typography>
+            ))}
+          </Paper>
+        )}
+
+        {!showClipboard && isPlaying && (
+          <Button
+            sx={{ position: 'absolute', top: 10, left: 10, zIndex: 10 }}
+            variant="contained"
+            size="small"
+            onClick={() => setShowClipboard(true)}
+          >
+            📋 Show Work Order
+          </Button>
+        )}
+
+        {/* Available Fittings Panel */}
+        {isPlaying && availableFittings.length > 0 && (
+          <Paper
+            sx={{
+              position: 'absolute',
+              bottom: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: 1,
+              p: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              zIndex: 10
+            }}
+          >
+            <Typography variant="caption" sx={{ alignSelf: 'center', mr: 1, fontWeight: 'bold' }}>
+              Fittings:
+            </Typography>
+            {availableFittings.map((fitting, idx) => (
+              <Button
+                key={idx}
+                variant="outlined"
+                size="small"
+                sx={{ minWidth: 80, fontSize: '0.7rem' }}
+              >
+                {fitting}
+              </Button>
+            ))}
+          </Paper>
+        )}
+
+        {/* Hand Cursor Info */}
+        {isPlaying && (
+          <Typography
+            variant="caption"
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              p: 1,
+              borderRadius: 1,
+              zIndex: 10
+            }}
+          >
+            🖐️ Use mouse to control 3D hand
+            <br />
+            Click & drag to pick up fittings
+          </Typography>
+        )}
+      </Box>
 
       {/* Instructions Dialog */}
       <Dialog open={showInstructions} maxWidth="sm" fullWidth>
