@@ -328,6 +328,16 @@ async function startServer(): Promise<void> {
     app.use('/api/social', socialRoutes.default)
     console.log('✓ Social Intelligence (Guardian Angel) routes registered')
     
+    // Integration Hub routes (SCADA, GIS, ERP, LoRaWAN)
+    const integrationRoutes = await import('./api/integration.routes.js')
+    app.use('/api/integration', integrationRoutes.default)
+    console.log('✓ Integration Hub (SCADA/GIS/ERP/LoRaWAN) routes registered')
+    
+    // Consumer Rewards routes (water conservation rewards)
+    const rewardsRoutes = await import('./api/rewards.routes.js')
+    app.use('/api/rewards', rewardsRoutes.default)
+    console.log('✓ Consumer Rewards (water conservation payments) routes registered')
+    
     // Add a top-level heatmap endpoint (global aggregation)
     try {
       const plumbingService = new PlumbingService(getDatabase())
