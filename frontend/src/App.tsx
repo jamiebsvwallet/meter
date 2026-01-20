@@ -59,7 +59,7 @@ const App: React.FC = () => {
   const [meters, setMeters] = useState<Meter[]>([])
   const [showDashboard, setShowDashboard] = useState<boolean>(false)
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null)
-  const [userType] = useState<'consumer' | 'business' | 'admin'>('consumer') // Set based on login
+  const [userType] = useState<'consumer' | 'business' | 'admin'>('business') // Set based on login
 
   // Creates a new meter.
   // This function will run when the user clicks "OK" in the creation dialog.
