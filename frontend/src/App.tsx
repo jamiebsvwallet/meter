@@ -18,6 +18,7 @@ const UnifiedDashboard = React.lazy(() => import('./components/UnifiedDashboard'
 const FeatureHistory = React.lazy(() => import('./components/FeatureHistory'))
 const PhotoJobReport = React.lazy(() => import('./components/PhotoJobReport'))
 const PilotSignup = React.lazy(() => import('./components/PilotSignup'))
+const PlumbingEducationGameVR = React.lazy(() => import('./components/PlumbingEducationGameVR'))
 import { IdentityCard } from 'metanet-identity-react'
 
 // Heavy blockchain SDKs and contract libraries are dynamically imported where needed to reduce initial bundle size.
@@ -332,8 +333,32 @@ const App: React.FC = () => {
             <PhotoJobReport onBack={() => setSelectedFeature(null)} />
           ) : selectedFeature === 'pilot-signup' ? (
             <PilotSignup onBack={() => setSelectedFeature(null)} />
+          ) : selectedFeature === 'vr-training-game' ? (
+            <Box sx={{ p: 2 }}>
+              <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
+              <PlumbingEducationGameVR />
+            </Box>
+          ) : selectedFeature === 'vulnerability-monitoring' ? (
+            <Box sx={{ p: 3 }}>
+              <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
+              <Typography variant="h4" gutterBottom>Vulnerability Monitoring</Typography>
+              <Typography variant="body1" paragraph>
+                Guardian Angel System - Social Intelligence for vulnerable customer protection
+              </Typography>
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Features:</Typography>
+              <ul>
+                <li><strong>Payment Anomaly Detection</strong> - Identify customers struggling with bills</li>
+                <li><strong>Crisis Detection</strong> - Hospital admissions, bereavement, unemployment</li>
+                <li><strong>Proactive Outreach</strong> - Automated support contact before disconnection</li>
+                <li><strong>Social Services Integration</strong> - Connect with local support organizations</li>
+                <li><strong>Compliance Tracking</strong> - Meet Ofwat vulnerability requirements</li>
+              </ul>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                Backend API: /api/social/dashboard
+              </Typography>
+            </Box>
           ) : selectedFeature === 'advanced-leak-detection' ? (
-            <div style={{ padding: '2em' }}>
+            <Box sx={{ p: 3 }}>
               <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
               <Typography variant="h4" gutterBottom>Advanced Leak Detection</Typography>
               <Typography variant="body1" paragraph>
@@ -349,7 +374,7 @@ const App: React.FC = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                 Backend API endpoints are ready at /api/advanced-leak-detection/
               </Typography>
-            </div>
+            </Box>
           ) : selectedFeature === 'feature-history' ? (
             <FeatureHistory onBack={() => setSelectedFeature(null)} />
           ) : (

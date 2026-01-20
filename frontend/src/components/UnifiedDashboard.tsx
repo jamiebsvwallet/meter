@@ -37,7 +37,9 @@ import {
   Timeline,
   IntegrationInstructions,
   CloudUpload,
-  CameraAlt
+  CameraAlt,
+  SportsEsports,
+  BugReport
 } from '@mui/icons-material'
 
 // Styled Components
@@ -210,6 +212,33 @@ const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
         value: '0'
       },
       path: '/pilot/signup',
+      category: 'business'
+    },
+    {
+      id: 'vr-training-game',
+      title: '3D Education Game',
+      description: '7-level VR/XR plumbing training game. Progressive skill-based learning with immersive support.',
+      icon: <SportsEsports fontSize="large" />,
+      color: '#9C27B0',
+      stats: {
+        label: 'Levels',
+        value: '7 available'
+      },
+      path: '/training/vr-game',
+      category: 'business'
+    },
+    {
+      id: 'vulnerability-monitoring',
+      title: 'Vulnerability Monitoring',
+      description: 'Guardian Angel system - Detect vulnerable customers, payment anomalies, crisis situations.',
+      icon: <BugReport fontSize="large" />,
+      color: '#F44336',
+      stats: {
+        label: 'Alerts',
+        value: '0'
+      },
+      badge: 0,
+      path: '/monitoring/vulnerability',
       category: 'business'
     },
     {
