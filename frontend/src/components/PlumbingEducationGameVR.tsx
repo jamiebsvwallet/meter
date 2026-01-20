@@ -317,37 +317,83 @@ export const PlumbingEducationGameVR: React.FC = () => {
   const create3DHandCursor = (): THREE.Group => {
     const handGroup = new THREE.Group()
     
-    // Palm
-    const palmGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.2)
-    const handMaterial = new THREE.MeshStandardMaterial({ 
+    // Palm - more detailed
+    const palmGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.15)
+    const skinMaterial = new THREE.MeshStandardMaterial({ 
       color: 0xffdbac, 
-      roughness: 0.7,
-      metalness: 0.1 
+      roughness: 0.8,
+      metalness: 0.0 
     })
-    const palm = new THREE.Mesh(palmGeometry, handMaterial)
+    const palm = new THREE.Mesh(palmGeometry, skinMaterial)
     handGroup.add(palm)
 
-    // Fingers
-    for (let i = 0; i < 4; i++) {
-      const finger = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8),
-        handMaterial
-      )
-      finger.position.set(-0.2 + i * 0.15, 0.35, 0)
-      finger.rotation.z = Math.PI / 2
-      handGroup.add(finger)
-    }
-
-    // Thumb
-    const thumb = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.1, 0.1, 0.4, 8),
-      handMaterial
+    // Thumb - articulated
+    const thumbBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.08, 0.25, 8),
+      skinMaterial
     )
-    thumb.position.set(-0.4, -0.1, 0)
-    thumb.rotation.z = Math.PI / 4
-    handGroup.add(thumb)
+    thumbBase.position.set(-0.25, -0.1, 0)
+    thumbBase.rotation.z = Math.PI / 4
+    handGroup.add(thumbBase)
 
-    handGroup.scale.set(0.5, 0.5, 0.5)
+    const thumbTip = new THREE.Mesh(
+      new THREE.SphereGeometry(0.06, 8, 8),
+      skinMaterial
+    )
+    thumbTip.position.set(-0.35, -0.25, 0)
+    handGroup.add(thumbTip)
+
+    // Fingers - 4 fingers with joints
+    const fingerPositions = [-0.15, -0.05, 0.05, 0.15]
+    fingerPositions.forEach((x, i) => {
+      // Proximal phalanx
+      const proximal = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.3, 8),
+        skinMaterial
+      )
+      proximal.position.set(x, 0.4, 0)
+      proximal.rotation.z = Math.PI / 2
+      proximal.name = `finger-${i}-proximal`
+      handGroup.add(proximal)
+
+      // Middle phalanx
+      const middle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.045, 0.25, 8),
+        skinMaterial
+      )
+      middle.position.set(x, 0.6, 0)
+      middle.rotation.z = Math.PI / 2
+      middle.name = `finger-${i}-middle`
+      handGroup.add(middle)
+
+      // Distal phalanx (fingertip)
+      const distal = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 8, 8),
+        skinMaterial
+      )
+      distal.position.set(x, 0.75, 0)
+      distal.name = `finger-${i}-tip`
+      handGroup.add(distal)
+
+      // Fingernail
+      const nail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.03, 0.01),
+        new THREE.MeshStandardMaterial({ color: 0xffe0e0, roughness: 0.3 })
+      )
+      nail.position.set(x, 0.77, 0.02)
+      handGroup.add(nail)
+    })
+
+    // Wrist
+    const wrist = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15, 0.18, 0.3, 16),
+      skinMaterial
+    )
+    wrist.position.set(0, -0.45, 0)
+    wrist.rotation.z = Math.PI / 2
+    handGroup.add(wrist)
+
+    handGroup.scale.set(0.3, 0.3, 0.3)
     return handGroup
   }
 
@@ -492,49 +538,97 @@ export const PlumbingEducationGameVR: React.FC = () => {
   }
 
   const createLevel1ValveControl = (scene: THREE.Scene) => {
-    // Create 5 valves with pipes
-    for (let i = 0; i < 5; i++) {
-      const pipeGroup = new THREE.Group()
+    // Create a realistic house plumbing system with main line and branches
+    const copperMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xB87333, 
+      metalness: 0.8, 
+      roughness: 0.2 
+    })
 
-      // Pipe
-      const pipe = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.2, 4, 16),
-        new THREE.MeshStandardMaterial({ color: 0x4488ff })
+    // Main water line (horizontal)
+    const mainPipe = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15, 0.15, 15, 16),
+      copperMaterial
+    )
+    mainPipe.rotation.z = Math.PI / 2
+    mainPipe.position.set(0, 4, -5)
+    scene.add(mainPipe)
+
+    // Create 5 branch lines with valves
+    const branchPositions = [-6, -3, 0, 3, 6]
+    branchPositions.forEach((x, i) => {
+      // Tee fitting at main line
+      const tee = new THREE.Mesh(
+        new THREE.TorusGeometry(0.25, 0.1, 16, 32),
+        new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.9, roughness: 0.1 })
       )
-      pipe.rotation.z = Math.PI / 2
-      pipeGroup.add(pipe)
+      tee.position.set(x, 4, -5)
+      tee.rotation.x = Math.PI / 2
+      scene.add(tee)
 
-      // Valve
-      const valve = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 0.8, 0.8),
-        new THREE.MeshStandardMaterial({
-          color: 0xff0000,
-          emissive: 0xff0000,
-          emissiveIntensity: 0
-        })
+      // Vertical branch pipe
+      const branchPipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, 2.5, 16),
+        copperMaterial
       )
-      valve.userData = { type: 'valve', state: 'open', levelId: 1, taskId: i }
-      interactableObjects.current.push(valve)
-      pipeGroup.add(valve)
+      branchPipe.position.set(x, 2.75, -5)
+      scene.add(branchPipe)
 
-      // Water particles (leak indicator)
-      for (let j = 0; j < 20; j++) {
-        const particle = new THREE.Mesh(
-          new THREE.SphereGeometry(0.05),
-          new THREE.MeshBasicMaterial({ color: 0x0088ff })
+      // Gate valve (detailed model)
+      const valveGroup = new THREE.Group()
+      
+      // Valve body
+      const valveBody = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.6, 0.4),
+        new THREE.MeshStandardMaterial({ color: 0x8B0000, metalness: 0.7, roughness: 0.3 })
+      )
+      valveGroup.add(valveBody)
+
+      // Valve handle
+      const handle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.8, 16),
+        new THREE.MeshStandardMaterial({ color: 0xFF0000, metalness: 0.8, roughness: 0.2 })
+      )
+      handle.rotation.z = Math.PI / 2
+      handle.position.y = 0.4
+      valveGroup.add(handle)
+
+      valveGroup.position.set(x, 1.5, -5)
+      valveGroup.userData = { type: 'valve', state: 'open', levelId: 1, taskId: i }
+      interactableObjects.current.push(valveBody)
+      scene.add(valveGroup)
+
+      // Water spray (leak indicator)
+      for (let j = 0; j < 30; j++) {
+        const droplet = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04),
+          new THREE.MeshStandardMaterial({ color: 0x4DB8FF, transparent: true, opacity: 0.7 })
         )
-        particle.position.set(
-          Math.random() * 0.5 - 0.25,
-          Math.random() * 2,
-          Math.random() * 0.5 - 0.25
+        droplet.position.set(
+          x + Math.random() * 0.4 - 0.2,
+          1.5 + Math.random() * 2,
+          -5 + Math.random() * 0.4 - 0.2
         )
-        particle.name = `water-particle-${i}`
-        pipeGroup.add(particle)
+        droplet.name = `water-particle-${i}`
+        scene.add(droplet)
       }
 
-      pipeGroup.position.set((i - 2) * 5, 3, 0)
-      scene.add(pipeGroup)
-    }
+      // Pipe to fixture
+      const fixturePipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 1, 16),
+        copperMaterial
+      )
+      fixturePipe.position.set(x, 0.5, -5)
+      scene.add(fixturePipe)
+
+      // Fixture
+      const fixture = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.3, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2 })
+      )
+      fixture.position.set(x, 0, -5)
+      scene.add(fixture)
+    })
   }
 
   const createLevel2PipeJointRepair = (scene: THREE.Scene) => {
