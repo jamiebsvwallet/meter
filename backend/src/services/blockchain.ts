@@ -1,22 +1,72 @@
 /**
  * Blockchain Service
  * Handles smart contract deployment and interaction with BSV blockchain
+ * TAAL API integration for transaction processing
+ * Metastream for real-time data streaming on BSV
+ * 
+ * Copyright © 2026 - All Rights Reserved
  */
 
 import { Db } from 'mongodb'
+import crypto from 'crypto'
+
+/**
+ * TAAL Configuration
+ * TAAL provides enterprise-grade BSV transaction processing
+ */
+export interface TAALConfig {
+  apiKey: string;
+  network: 'mainnet' | 'testnet';
+  apiUrl: string;
+  miningFeePolicy: 'standard' | 'fast' | 'instant';
+}
+
+/**
+ * Metastream Configuration
+ * Real-time data streaming protocol on BSV
+ */
+export interface MetastreamConfig {
+  channelId: string;
+  streamKey: string;
+  protocol: 'mqtt' | 'websocket' | 'sse';
+  encryptionEnabled: boolean;
+}
 
 export interface BlockchainProof {
   txId: string
   timestamp: number
   dataHash: string
   verified: boolean
+  taalTxId?: string;          // TAAL transaction ID
+  metastreamChannel?: string;  // Metastream channel
+  blockHeight?: number;
+  confirmations?: number;
 }
 
 export class BlockchainService {
-  constructor(private db: Db) {}
+  private taalConfig: TAALConfig;
+  private metastreamConfig: MetastreamConfig;
+
+  constructor(private db: Db) {
+    // Initialize TAAL configuration
+    this.taalConfig = {
+      apiKey: process.env.TAAL_API_KEY || '',
+      network: (process.env.BSV_NETWORK as 'mainnet' | 'testnet') || 'mainnet',
+      apiUrl: process.env.TAAL_API_URL || 'https://api.taal.com/api/v1',
+      miningFeePolicy: 'standard'
+    };
+
+    // Initialize Metastream configuration
+    this.metastreamConfig = {
+      channelId: process.env.METASTREAM_CHANNEL || 'water-iot-stream',
+      streamKey: process.env.METASTREAM_KEY || '',
+      protocol: 'websocket',
+      encryptionEnabled: true
+    };
+  }
 
   /**
-   * Submit IoT data proof to blockchain
+   * Submit IoT data proof to blockchain via TAAL
    * Hash the data and store transaction on BSV
    */
   async submitIoTProof(
@@ -26,9 +76,24 @@ export class BlockchainService {
     deviceId: string
   ): Promise<BlockchainProof> {
     try {
-      // In production, this would interact with actual BSV smart contracts
-      // For now, we simulate by storing proof references
-      
+      // 1. Submit to TAAL for blockchain processing
+      const taalTx = await this.submitToTAAL({
+        dataHash,
+        propertyId,
+        deviceId,
+        timestamp,
+        type: 'iot_reading'
+      });
+
+      // 2. Stream to Metastream for real-time subscribers
+      await this.publishToMetastream({
+        propertyId,
+        deviceId,
+        dataHash,
+        timestamp
+      });
+
+      // 3. Store proof in local database
       const proofCollection = this.db.collection('blockchain_proofs')
       
       const proof = {
@@ -39,14 +104,15 @@ export class BlockchainService {
         type: 'iot_reading',
         submittedAt: Date.now(),
         verified: true,
-        // In real implementation:
-        // txId: result.txid from contract deployment
-        // network: process.env.BSV_NETWORK
+        taalTxId: taalTx.txid,
+        metastreamChannel: this.metastreamConfig.channelId,
+        blockHeight: taalTx.blockHeight,
+        confirmations: 0
       }
       
       const result = await proofCollection.insertOne(proof)
       
-      console.log(`✓ IoT Proof recorded: ${result.insertedId}`)
+      console.log(`✓ IoT Proof recorded: ${result.insertedId} | TAAL TX: ${taalTx.txid}`)
       
       return {
         txId: result.insertedId.toString(),
