@@ -36,7 +36,8 @@ import {
   EmojiEvents,
   Timeline,
   IntegrationInstructions,
-  CloudUpload
+  CloudUpload,
+  CameraAlt
 } from '@mui/icons-material'
 
 // Styled Components
@@ -86,13 +87,13 @@ interface DashboardFeature {
 interface UnifiedDashboardProps {
   userId?: string
   userType: 'consumer' | 'business' | 'admin'
-  onFeatureClick: (featureId: string) => void
+  onFeatureSelect: (featureId: string) => void
 }
 
 const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
   userId,
   userType,
-  onFeatureClick
+  onFeatureSelect
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [features, setFeatures] = useState<DashboardFeature[]>([])
@@ -353,7 +354,7 @@ const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
           <Grid item xs={12} sm={6} md={4} key={feature.id}>
             <FeatureCard elevation={3}>
               <CardActionArea 
-                onClick={() => onFeatureClick(feature.id)}
+                onClick={() => onFeatureSelect(feature.id)}
                 sx={{ height: '100%', p: 2 }}
               >
                 <CardContent>

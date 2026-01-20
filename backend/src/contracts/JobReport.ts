@@ -45,6 +45,18 @@ export class JobReport extends SmartContract {
     @prop(true)
     customerApproved: boolean
 
+    @prop(true)
+    photoHashes: ByteString // SHA-256 hashes of all photos (comma-separated)
+
+    @prop(true)
+    photoCount: bigint // Number of photos attached
+
+    @prop(true)
+    videoHashes: ByteString // SHA-256 hashes of videos (comma-separated)
+
+    @prop(true)
+    digitalTwinData: ByteString // JSON with 3D coordinates of work location
+
     constructor(
         jobId: ByteString,
         propertyId: ByteString,
@@ -55,7 +67,11 @@ export class JobReport extends SmartContract {
         completedAt: bigint,
         cost: bigint,
         status: ByteString,
-        customerApproved: boolean
+        customerApproved: boolean,
+        photoHashes: ByteString,
+        photoCount: bigint,
+        videoHashes: ByteString,
+        digitalTwinData: ByteString
     ) {
         super(...arguments)
         this.jobId = jobId

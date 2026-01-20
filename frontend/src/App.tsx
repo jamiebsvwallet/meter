@@ -16,6 +16,8 @@ import './App.scss'
 const VRPlaceholder = React.lazy(() => import('./components/VRPlaceholder'))
 const UnifiedDashboard = React.lazy(() => import('./components/UnifiedDashboard'))
 const FeatureHistory = React.lazy(() => import('./components/FeatureHistory'))
+const PhotoJobReport = React.lazy(() => import('./components/PhotoJobReport'))
+const PilotSignup = React.lazy(() => import('./components/PilotSignup'))
 import { IdentityCard } from 'metanet-identity-react'
 
 // Heavy blockchain SDKs and contract libraries are dynamically imported where needed to reduce initial bundle size.
