@@ -330,9 +330,15 @@ const App: React.FC = () => {
       {showDashboard ? (
         <Suspense fallback={<LoadingBar />}>
           {selectedFeature === 'photo-job-report' ? (
-            <PhotoJobReport onBack={() => setSelectedFeature(null)} />
+            <Box sx={{ p: 2 }}>
+              <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
+              <PhotoJobReport />
+            </Box>
           ) : selectedFeature === 'pilot-signup' ? (
-            <PilotSignup onBack={() => setSelectedFeature(null)} />
+            <Box sx={{ p: 2 }}>
+              <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
+              <PilotSignup />
+            </Box>
           ) : selectedFeature === 'vr-training-game' ? (
             <Box sx={{ p: 2 }}>
               <Button onClick={() => setSelectedFeature(null)} sx={{ mb: 2 }}>← Back to Dashboard</Button>
