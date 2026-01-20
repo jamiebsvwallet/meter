@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import {
   AppBar, Toolbar, List, ListItem, Dialog,
   DialogTitle, DialogContent, DialogContentText, DialogActions,
-  Button, Fab, LinearProgress, Typography, IconButton, Grid
+  Button, Fab, LinearProgress, Typography, IconButton, Grid, Box
 } from '@mui/material'
 import { styled } from '@mui/system'
 import AddIcon from '@mui/icons-material/Add'
@@ -376,7 +376,10 @@ const App: React.FC = () => {
               </Typography>
             </Box>
           ) : selectedFeature === 'feature-history' ? (
-            <FeatureHistory onBack={() => setSelectedFeature(null)} />
+            <FeatureHistory 
+              featureId="default" 
+              onBack={() => setSelectedFeature(null)} 
+            />
           ) : (
             <UnifiedDashboard 
               onFeatureSelect={(feature) => setSelectedFeature(feature)}
