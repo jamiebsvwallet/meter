@@ -338,6 +338,11 @@ async function startServer(): Promise<void> {
     app.use('/api/rewards', rewardsRoutes.default)
     console.log('✓ Consumer Rewards (water conservation payments) routes registered')
     
+    // Utility Bill Payment routes (pay water/electricity with BSV)
+    const billRoutes = await import('./api/bills.routes.js')
+    app.use('/api/bills', billRoutes.default)
+    console.log('✓ Utility Bill Payment (BSV micropayments + credits) routes registered')
+    
     // Add a top-level heatmap endpoint (global aggregation)
     try {
       const plumbingService = new PlumbingService(getDatabase())
