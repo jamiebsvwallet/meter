@@ -50,9 +50,9 @@ import {
   WaterDrop,
   Map,
   AccountTree,
-  Heatmap,
+  Whatshot,
   Lock,
-  Blockchain,
+  Link,
   CheckCircle,
   Timeline,
   Group,
@@ -263,7 +263,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
                 <Chip
                   label={`Data Hash: ${smartMeterData.dataHash.substring(0, 16)}...`}
                   size="small"
-                  icon={<Blockchain />}
+                  icon={<Link />}
                   sx={{ mt: 1 }}
                 />
               </CardContent>
@@ -424,7 +424,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
                 <Chip
                   label={`Data Hash: ${neighborhoodData.dataHash.substring(0, 16)}...`}
                   size="small"
-                  icon={<Blockchain />}
+                  icon={<Link />}
                   sx={{ mt: 1 }}
                 />
               </CardContent>
@@ -575,7 +575,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
             <Chip
               label={`Data Hash: ${pipeInfrastructure.dataHash.substring(0, 16)}...`}
               size="small"
-              icon={<Blockchain />}
+              icon={<Link />}
               sx={{ mt: 2, ml: 1 }}
             />
           </CardContent>
@@ -746,7 +746,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
             <Chip
               label={`Data Hash: ${acousticAnalysis.dataHash.substring(0, 16)}...`}
               size="small"
-              icon={<Blockchain />}
+              icon={<Link />}
               sx={{ mt: 2 }}
             />
           </CardContent>
@@ -879,7 +879,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
             <Chip
               label={`Data Hash: ${hotspotData.dataHash.substring(0, 16)}...`}
               size="small"
-              icon={<Blockchain />}
+              icon={<Link />}
               sx={{ mt: 2 }}
             />
           </CardContent>
@@ -1031,7 +1031,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
   const renderBlockchainSubmission = () => (
     <Box>
       <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Blockchain color="primary" />
+        <Link color="primary" />
         BSV Blockchain Verification
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
@@ -1094,7 +1094,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
             fullWidth
             onClick={submitToBlockchain}
             disabled={submittingToBlockchain || blockchainTxid !== null}
-            startIcon={<Blockchain />}
+            startIcon={<Link />}
           >
             {submittingToBlockchain ? 'Submitting...' : blockchainTxid ? 'Submitted' : 'Submit to BSV Blockchain'}
           </Button>
@@ -1185,7 +1185,7 @@ const AdvancedLeakDetectionReport: React.FC = () => {
           <Tab icon={<Mic />} label="Acoustic" />
           <Tab icon={<Warning />} label="Hotspot" />
           <Tab icon={<Lock />} label="Consent" />
-          <Tab icon={<Blockchain />} label="Blockchain" />
+          <Tab icon={<Link />} label="Blockchain" />
         </Tabs>
 
         <TabPanel value={activeTab} index={0}>

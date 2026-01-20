@@ -47,7 +47,7 @@ import {
   People,
   AttachMoney,
   Favorite,
-  Emergency
+  LocalHospital
 } from '@mui/icons-material'
 
 interface DashboardStats {
@@ -233,7 +233,7 @@ export const SocialIntelligenceDashboard: React.FC = () => {
           <Card elevation={3}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Emergency color="warning" sx={{ mr: 1 }} />
+                <LocalHospital color="warning" sx={{ mr: 1 }} />
                 <Typography variant="h6">Active Monitoring</Typography>
               </Box>
               <Typography variant="h3" color="warning.main">
