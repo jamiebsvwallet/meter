@@ -1,0 +1,26 @@
+{
+  "recordType": "BSV_OWNERSHIP_CLAIM",
+  "claimant": "Jamie Wyatt",
+  "networkScope": "BSV network",
+  "createdAtUtc": "2026-02-22T02:10:03Z",
+  "claims": [
+    {
+      "id": "claim-1",
+      "title": "Automatic Notice of Dispute on utility mismatch",
+      "statement": "When water utility company data does not match my platform data, an automatic Notice of Dispute is issued."
+    },
+    {
+      "id": "claim-2",
+      "title": "Automatic notice when water exceeds potable baseline",
+      "statement": "When measured water quality exceeds baseline for potable or drinkable water, an automatic notice and rectification workflow is issued."
+    },
+    {
+      "id": "claim-3",
+      "title": "Vulnerability-triggered legal notice workflow",
+      "statement": "A vulnerability condition triggers timestamped legal notice actions."
+    }
+  ],
+  "priorityAssertion": "These three ideas belong to Jamie Wyatt and were conceived and implemented first by Jamie Wyatt.",
+  "historicalAssertion": "Initial timestamps asserted by claimant as beginning January 2026 and earlier.",
+  "intent": "Create immutable timestamp evidence on BSV."
+}
